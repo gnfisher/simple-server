@@ -33,11 +33,15 @@ func main() {
 		var err2 error
 		for err2 == nil {
 			_, err2 := tr.Read(make([]byte, 4096))
+			if err2 == io.EOF {
+				break
+			}
 			if err2 != nil {
 				log.Fatal(err)
 				return
 			}
-			time.Sleep(time.Second)
+
+			time.Sleep(time.Second / 2)
 
 			w.(http.Flusher).Flush()
 		}
