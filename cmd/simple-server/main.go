@@ -23,24 +23,26 @@ func main() {
 
 	http.HandleFunc("/sse", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
+
 		f, err := os.Open("file.txt")
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 		defer f.Close()
+
 		tr := io.TeeReader(f, w)
-		var err2 error
-		for err2 == nil {
-			_, err2 := tr.Read(make([]byte, 4096))
-			if err2 == io.EOF {
+		buffer := make([]byte, 4096)
+		for {
+			_, err := tr.Read(buffer)
+			if err == io.EOF {
 				break
 			}
-			if err2 != nil {
-				log.Fatal(err)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
 			time.Sleep(time.Second / 2)
 
 			w.(http.Flusher).Flush()
